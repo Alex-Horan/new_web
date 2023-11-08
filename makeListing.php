@@ -41,7 +41,7 @@ function generateRandomString($length = 10) {
 //web page php template start
 //
 //
-
+//This is what will be written into every php file created
 $template = "
 <?php 
 \$fname = explode('.', __FILE__)[0];
@@ -58,13 +58,13 @@ $template = "
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title><?php $name ?></title>
+    <title><?php \$name ?></title>
 </head>
 <body>
     <div>
-        <h1> <?php echo $name; ?></h1>
-        <p><?php echo $desc; ?></p>
-        <h3>$<?php echo $price; ?></h3>
+        <h1> <?php echo \$name; ?></h1>
+        <p><?php echo \$desc; ?></p>
+        <h3>$<?php echo \$price; ?></h3>
     </div>
 
 
@@ -75,7 +75,7 @@ $template = "
 
 
 
-
+// template end
 
 
 $db = new MyDB();
@@ -87,16 +87,38 @@ if ((!empty($name)) && (!empty($desc)) && (!empty($price))) {
         if (is_dir("./item_pages/$name/$name.json") || is_dir("./item_pages/$name/$name.php") || is_dir("./item_pages/$name")) {
             echo "goof";
         } else {
-            mkdir("./item_pages/$name", 0760, true);
+            mkdir("./item_pages/$name", 0760, true); //changes perms so files can be created, might need to change back to either 
             $jf = fopen("./item_pages/$name/$name.json","c"); //creates json file for each listing posted
             $pf = fopen("./item_pages/$name/$name.php","c"); //creates php file for each listing posted
-            fwrite($jf, $je);
-            fwrite($pf, $template);
-            $db->exec("INSERT INTO listings(name, descript, price, randID) VALUES ('$name', '$desc', '$price', '$randId')");
-            $db->close();
-            fclose($jf);
-            fclose($pf);
-            header("Location: ./$name/$name.php");
+
+
+            fwrite($jf, $je); //writes the json object to the newly created $name/$name.json file
+            fwrite($pf, $template); //adds the html/php template to the newly created php file
+
+            $db->exec("INSERT INTO listings(name, descript, price, randID) VALUES ('$name', '$desc', '$price', '$randId')"); //after sanitizing and validating the data, this inserts it into the sqlite3 database
+            $db->close(); //closes the connection between database CRUD, possibly slower? but makes it much less vulnerable. if too slow will fix in future
+
+            fclose($jf); //closes the file connection, leaving it open would be unnecessary and insecure
+            fclose($pf); //same as above
+
+            $jdata[] = array("./$name/$name.php"); //creaates an array of the newly created php file
+            $tmp = fopen("./fpaths.json", "a");
+            fclose($tmp);
+            if (!file_get_contents("./fpaths.json")) { //checks if there is already a json object 
+                // echo "good";
+                $ejda = json_encode($jdata);
+                file_put_contents("./fpaths.json", $ejda); //puts the encoded json object into the path file
+                header("Location: ./item_pages/$name/$name.php");
+            } else {
+                // echo "bad";
+                $tmpInp = file_get_contents("./fpaths.json"); // if there is already an object in the paths
+                $tmpData = json_decode($tmpInp);
+                array_push($tmpData, $jdata); // this is what adds the comma when adding multiple json objects
+                $finData = json_encode($tmpData);
+                file_put_contents("./fpaths.json", $finData);
+
+                header("Location: ./item_pages/$name/$name.php");
+            }
         }
     }
 ?>
