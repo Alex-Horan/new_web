@@ -35,14 +35,15 @@ function generateRandomString($length = 10) {
 
 
 if ((!empty($name)) && (!empty($desc)) && (!empty($price))) {
-    $ji = array('name' => $name, 'description' => $desc, 'price'=> $price, 'id' => generateRandomString(10));
+    $ji = array('name' => $name, 'description' => $desc, 'price'=> $price, 'id' => generateRandomString(10)); //creates an associative array to turn into json object
     $je = json_encode($ji);
         if (is_dir("./item_pages/$name/$name") || is_dir("./item_pages/$name")) {
-            echo "goof";
+            echo "goof"; //im honestly not sure, if this runs then i should probably remove it
+            //normally id just like it to skip the file or cancel the creation
         } else {
             mkdir("./item_pages/$name");
-            $jf = fopen("./item_pages/$name/$name.json", 'c');
-            $pf = fopen("./item_pages/$name/$name.php", 'c');
+            $jf = fopen("./item_pages/$name/$name.json", 'c'); //creates json file for each page created
+            $pf = fopen("./item_pages/$name/$name.php", 'c'); //creates php file for each page created
             fwrite($jf, $je);
         }
 
